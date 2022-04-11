@@ -1,0 +1,13 @@
+# Configuration file for transforming frequencies into images
+root_dir: /mlodata1/lugeon/dream_data/processed/healthy/norm
+output_dir: /mlodata1/lugeon/dream_data/processed/healthy/images
+subject_pattern: 'H*'
+
+e_locs_path: /mlodata1/lugeon/dream_data/chuv/metadata/channelcoords.mat
+e_locs_read_format: scipy
+
+gen_images_opts:
+  n_gridpoints: 32
+  normalize: False
+  edgeless: False
+  interpolation: cubic

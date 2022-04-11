@@ -1,0 +1,21 @@
+# Configuration file for processing eeg
+root_dir: /mlodata1/lugeon/dream_data/chuv/raw
+read_format: h5py
+output_dir: /mlodata1/lugeon/dream_data/processed/healthy/freq
+
+filter_opts:
+  subject_pattern: 'H*'
+  data_pattern: '*_E*_*_S*.mat'
+  n_electrodes: 257
+
+bw_power_opts:
+  sampling_frequency: 500
+  time_period: 120
+  time_window: 2
+  time_shift: 0.5
+  bandwidths:
+    - [1, 4] 
+    - [4, 8]
+    - [8, 16]
+    - [16, 32]
+    - [32, 64]

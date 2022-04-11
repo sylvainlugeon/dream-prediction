@@ -1,0 +1,27 @@
+data:
+  hdf5_file: /mlodata1/lugeon/dream_data/processed/healthy/dataset.h5
+  window: 10
+  output_type: last_frame
+  fraction: 0.1
+  batch_size: 64
+
+model:
+  name: EncoderDecoder
+  kwargs:
+    activation_fn: ReLU
+    dropout: 0.8
+    kernel_dim: 3
+    encoding_dim: 1024
+    time_filter_dim: 5
+    n_time_filters: 64
+    n_channels: 2
+    image_dim: 32
+    n_frames: 9
+  loss: MSELoss
+
+optim: 
+  name: Adam
+  kwargs:
+    lr: 1.e-5
+
+n_epochs: 100
