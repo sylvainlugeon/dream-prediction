@@ -4,6 +4,10 @@ import h5py
 import glob
 import argparse
 import yaml
+import sys
+
+sys.path.append('/home/lugeon/eeg_project/scripts')
+from interaction.interaction import ask_for_config
 
 
 def main():
@@ -13,6 +17,9 @@ def main():
 
     with open(args.config) as file:
         config = yaml.load(file, Loader=yaml.FullLoader)
+    
+    if ask_for_config(config): pass
+    else: return
 
     transform_by_subject(**config)
 
@@ -69,6 +76,7 @@ def transform_by_subject(root_dir, output_file, labels, subject_pattern='*'):
     f.close()
 
     print('Done.\n')
+    print(f'Dataset {output_file} created with {n_frames} frames.\n')
 
 
 def _get_dataset_shape(subjects, labels_map):

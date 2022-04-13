@@ -1,6 +1,6 @@
 # Configuration file for normalizing frequency signal
-root_dir: /mlodata1/lugeon/dream_data/processed/healthy/freq
-output_dir: /mlodata1/lugeon/dream_data/processed/healthy/norm
+root_dir: /mlodata1/lugeon/dream_data/processed/baseline/freq
+output_dir: /mlodata1/lugeon/dream_data/processed/baseline/norm
 subject_pattern: 'H*'
 
 norm_opts:

@@ -12,6 +12,7 @@ from sklearn.preprocessing import scale
 
 sys.path.append('/home/lugeon/eeg_project/scripts')
 from data_processing.aep import map_to_2d
+from interaction.interaction import ask_for_config
 
 
 def main():
@@ -21,6 +22,9 @@ def main():
 
     with open(args.config) as file:   
         config = yaml.load(file, Loader=yaml.FullLoader)
+        
+    if ask_for_config(config): pass
+    else: return
     
     transform_by_subject(**config)
 

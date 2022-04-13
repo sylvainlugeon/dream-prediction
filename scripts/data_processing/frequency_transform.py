@@ -13,6 +13,7 @@ import logging
 
 sys.path.append('/home/lugeon/eeg_project/scripts')
 from data_processing.bandwidths_power import bandwidths_power
+from interaction.interaction import ask_for_config
 
 def main():
     parser = argparse.ArgumentParser()
@@ -21,6 +22,9 @@ def main():
 
     with open(args.config) as file:   
         config = yaml.load(file, Loader=yaml.FullLoader)
+        
+    if ask_for_config(config): pass
+    else: return
 
     transform_by_subject(**config)
 

@@ -1,5 +1,5 @@
 data:
-  hdf5_file: /mlodata1/lugeon/dream_data/processed/healthy/dataset.h5
+  hdf5_file: /mlodata1/lugeon/dream_data/processed/healthy/dataset_small.h5
   window: 10
   output_type: last_frame
   fraction: 0.1
@@ -14,14 +14,40 @@ model:
     encoding_dim: 1024
     time_filter_dim: 5
     n_time_filters: 64
-    n_channels: 2
+    n_channels: 5
     image_dim: 32
     n_frames: 9
-  loss: MSELoss
+
+n_epochs: 100
+device: 'cuda:0'
+    
+loss: 
+  name: MSELoss
+  kwargs:
+    reduction: sum
 
 optim: 
   name: Adam
   kwargs:
-    lr: 1.e-5
+    lr: 1.e-2
 
-n_epochs: 100
+scheduler:
+  enabled: True
+  name: ReduceLROnPlateau
+  kwargs:
+    mode: min
+    factor: 0.1 
+    patience: 0
+    min_lr: 1.e-8
+    threshold: 1.e-4
+    verbose: True
+
+early_stop:
+  enabled: True
+  kwargs:
+    patience: 2
+    delta: 0
+    path: 'checkpoint/checkpoint.pt'
+    verbose: True
+
+

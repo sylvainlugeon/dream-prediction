@@ -1,5 +1,6 @@
 # Configuration file for transforming frequencies into images
 root_dir: /mlodata1/lugeon/dream_data/processed/healthy/images
-output_file: /mlodata1/lugeon/dream_data/processed/healthy/dataset.h5
-labels: /mlodata1/lugeon/dream_data/chuv/metadata/h_labels.txt
+output_file: /mlodata1/lugeon/dream_data/processed/healthy/dataset_small.h5
+labels: /mlodata1/lugeon/dream_data/chuv/metadata/healthy_labels_map_small.txt
+subject_pattern: 'H*'
 

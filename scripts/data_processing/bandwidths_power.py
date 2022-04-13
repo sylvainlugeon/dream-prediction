@@ -7,7 +7,7 @@ def bandwidths_power(time_signal, sampling_frequency, time_period, time_window, 
     time_signal = time_signal - time_signal.mean(axis=1)[:, np.newaxis] 
 
     # truncate signals given the number of samples to consider
-    if time_period:
+    if time_period > 0:
         n_samples = time_period * sampling_frequency 
     else: 
         n_samples = time_signal.shape[0]
@@ -21,7 +21,7 @@ def bandwidths_power(time_signal, sampling_frequency, time_period, time_window, 
     frequency_space = np.fft.rfftfreq(sample_window, 1 / sampling_frequency) 
 
     # number of frames for which the FFT is computed
-    n_frames = int((time_period - time_window) / time_shift) + 1 
+    n_frames = int((n_samples - sample_window) / sample_shift) + 1 
     n_units = time_signal.shape[1]
     n_bandwidths = len(bandwidths)
 
