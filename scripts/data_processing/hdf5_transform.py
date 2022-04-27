@@ -5,6 +5,7 @@ import glob
 import argparse
 import yaml
 import sys
+import tqdm
 
 sys.path.append('/home/lugeon/eeg_project/scripts')
 from interaction.interaction import ask_for_config
@@ -32,6 +33,8 @@ def transform_by_subject(root_dir, output_file, labels, subject_pattern='*'):
     labels = pd.read_csv(labels, sep=' ', names=['trial', 'label'])
     labels_map = dict(zip(labels.trial, labels.label))
 
+    print('Compute size of the dataset...')
+
     # retrieve numpy archive containing the images, and the size of the dataset
     subjects = glob.glob(f'{root_dir}/{subject_pattern}')
     n_frames, n_gridpoints, n_channels = _get_dataset_shape(subjects, labels_map)
@@ -44,10 +47,12 @@ def transform_by_subject(root_dir, output_file, labels, subject_pattern='*'):
     dset_fid = f.create_dataset('frame_id', (n_frames,))
     dset_labels = f.create_dataset('labels', (n_frames,))
     dset_snames = f.create_dataset('subject_name', (len(subjects),), dtype='S04')
+    
+    print('Fill the dataset...')
 
     # for each subject numpy archive
     sequence_counter = 0
-    for subject_id, subject in enumerate(subjects):
+    for subject_id, subject in tqdm.tqdm(enumerate(subjects), total=len(subjects), ncols=70,):
 
         subject_name = subject.split('/')[-1].split('.')[0]
         dset_snames[subject_id] = subject_name
@@ -82,7 +87,7 @@ def transform_by_subject(root_dir, output_file, labels, subject_pattern='*'):
 def _get_dataset_shape(subjects, labels_map):
 
     n_frames, n_gridpoints, n_channels = 0, 0, 0
-    for subject_id, subject in enumerate(subjects):
+    for subject_id, subject in tqdm.tqdm(enumerate(subjects), total=len(subjects), ncols=70):
 
         with np.load(subject) as images:
 

@@ -1,0 +1,66 @@
+save_dir: ./result/rl_contrastive_learning_2
+
+data:
+  dset_name: EEG_Image_Batch_Dataset
+  dset_kwargs:
+    hdf5_file: /mlodata1/lugeon/dream_data/processed/baseline/dataset.h5
+    window: 20
+    slide: 5
+    shuffle: True
+    batch_size: 512
+    transforms: 
+      - f: permute_frames
+        kwargs: {}
+      - f: jitter_channels
+        kwargs:
+          low: 0.5
+          high: 2
+    return_subject: False
+    output_type: transform
+  fraction: 0.1
+
+model:
+  name: ContrastiveResNet18
+  kwargs:
+    dropout: 0.5
+    encoding_dim: 1024
+    projection_dim: 100
+    time_filter_dim: 5
+    n_time_filters: 64
+    n_channels: 5
+    n_frames: 20
+
+n_epochs: 10_000
+reshuffle: True
+device: 'cuda:0'
+    
+loss: 
+  name: ContrastiveLoss
+  kwargs:
+    temperature: 0.5
+
+optim: 
+  name: Adam
+  kwargs:
+    lr: 1.e-4
+
+scheduler:
+  enabled: True
+  name: ReduceLROnPlateau
+  kwargs:
+    mode: min
+    factor: 0.1 
+    patience: 10
+    min_lr: 1.e-8
+    threshold: 1.e-4
+    verbose: True
+
+early_stop:
+  enabled: True
+  kwargs:
+    patience: 12
+    delta: 0
+    path: 'checkpoint.pt'
+    verbose: True
+
+

@@ -1,0 +1,47 @@
+data:
+  batch_size: 32
+  fraction: 0.1
+  hdf5_file: /mlodata1/lugeon/dream_data/processed/baseline/dataset.h5
+  output_type: last_frame
+  slide: 5
+  window: 21
+device: cuda:0
+early_stop:
+  enabled: true
+  kwargs:
+    delta: 0
+    path: checkpoint.pt
+    patience: 30
+    verbose: true
+loss:
+  kwargs:
+    reduction: sum
+  name: MSELoss
+model:
+  kwargs:
+    activation_fn: ReLU
+    dropout: 0.8
+    encoding_dim: 1024
+    image_dim: 32
+    kernel_dim: 3
+    n_channels: 5
+    n_frames: 20
+    n_time_filters: 64
+    time_filter_dim: 5
+  name: EncoderDecoder
+n_epochs: 10000
+optim:
+  kwargs:
+    lr: 1.0e-05
+  name: Adam
+save_dir: ./result/repr_learning_baseline
+scheduler:
+  enabled: true
+  kwargs:
+    factor: 0.1
+    min_lr: 1.0e-08
+    mode: min
+    patience: 10
+    threshold: 0.0001
+    verbose: true
+  name: ReduceLROnPlateau

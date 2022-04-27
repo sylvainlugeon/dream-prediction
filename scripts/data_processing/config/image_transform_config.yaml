@@ -1,6 +1,6 @@
 # Configuration file for transforming frequencies into images
-root_dir: /mlodata1/lugeon/dream_data/processed/baseline/norm
-output_dir: /mlodata1/lugeon/dream_data/processed/baseline/images
+root_dir: /mlodata1/lugeon/dream_data/processed/healthy/norm
+output_dir: /mlodata1/lugeon/dream_data/processed/healthy/images
 subject_pattern: 'H*'
 
 e_locs_path: /mlodata1/lugeon/dream_data/chuv/metadata/channelcoords.mat
