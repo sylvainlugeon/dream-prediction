@@ -1,6 +1,6 @@
-# Configuration file for transforming frequencies into images
-root_dir: /mlodata1/lugeon/dream_data/processed/healthy/images
-output_file: /mlodata1/lugeon/dream_data/processed/healthy/dataset.h5
-labels: /mlodata1/lugeon/dream_data/chuv/metadata/healthy_labels_map.txt
+# Configuration file for creating a H5 dataset from images
+root_dir: /mlodata1/lugeon/dream_data/processed/baseline_nrem/images
+output_file: /mlodata1/lugeon/dream_data/processed/baseline_nrem/dataset.h5
+metadata: /mlodata1/lugeon/dream_data/chuv/metadata/baseline_metadata.txt
 subject_pattern: 'H*'
 

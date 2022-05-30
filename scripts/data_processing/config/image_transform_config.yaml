@@ -1,9 +1,9 @@
 # Configuration file for transforming frequencies into images
-root_dir: /mlodata1/lugeon/dream_data/processed/healthy/norm
-output_dir: /mlodata1/lugeon/dream_data/processed/healthy/images
-subject_pattern: 'H*'
+root_dir: /mlodata1/lugeon/dream_data/processed/madison_nrem/norm
+output_dir: /mlodata1/lugeon/dream_data/processed/madison_nrem/images
+subject_pattern: 'M*'
 
-e_locs_path: /mlodata1/lugeon/dream_data/chuv/metadata/channelcoords.mat
+e_locs_path: /mlodata1/lugeon/dream_data/chuv/metadata/original/channelcoords.mat
 e_locs_read_format: scipy
 
 gen_images_opts:

@@ -1,3 +1,4 @@
+from lib2to3.pgen2.pgen import DFAState
 import numpy as np
 import pandas as pd
 import h5py
@@ -25,13 +26,20 @@ def main():
     transform_by_subject(**config)
 
 
-def transform_by_subject(root_dir, output_file, labels, subject_pattern='*'):
+def transform_by_subject(root_dir, output_file, metadata, subject_pattern='*'):
 
     print('\nCreate an HDF5 dataset with images...')
 
     # mapping between trials and labels
-    labels = pd.read_csv(labels, sep=' ', names=['trial', 'label'])
-    labels_map = dict(zip(labels.trial, labels.label))
+    df_metadata = pd.read_csv(metadata, 
+                              sep=' ', 
+                              header=0, 
+                              names=['trial', 'label', 'sleep_cycle', 'sleep_stage', 'elapsed_time'])
+    
+    labels_map = dict(zip(df_metadata.trial, df_metadata.label))
+    cycle_map = dict(zip(df_metadata.trial, df_metadata.sleep_cycle))
+    stage_map = dict(zip(df_metadata.trial, df_metadata.sleep_stage))
+    etime_map = dict(zip(df_metadata.trial, df_metadata.elapsed_time))
 
     print('Compute size of the dataset...')
 
@@ -44,8 +52,11 @@ def transform_by_subject(root_dir, output_file, labels, subject_pattern='*'):
     dset_images = f.create_dataset('images', (n_frames, n_channels, n_gridpoints, n_gridpoints))
     dset_sid = f.create_dataset('subject_id', (n_frames,))
     dset_tid = f.create_dataset('trial_id', (n_frames,))
+    dset_ss = f.create_dataset('sleep_stage', (n_frames,))
+    dset_sc = f.create_dataset('sleep_cycle', (n_frames,))
     dset_fid = f.create_dataset('frame_id', (n_frames,))
     dset_labels = f.create_dataset('labels', (n_frames,))
+    dset_etime = f.create_dataset('elapsed_time', (n_frames,))
     dset_snames = f.create_dataset('subject_name', (len(subjects),), dtype='S04')
     
     print('Fill the dataset...')
@@ -67,14 +78,23 @@ def transform_by_subject(root_dir, output_file, labels, subject_pattern='*'):
 
                 sequence = images[trial]
                 sequence_length = sequence.shape[0]
-                label = labels_map[trial.split('.')[0]]
+                
+                trial_key = trial.split('.')[0]
+                label = labels_map[trial_key]
+                sleep_stage = stage_map[trial_key]
+                sleep_cycle = cycle_map[trial_key]
+                etime = etime_map[trial_key]
+                
                 slice_ = slice(sequence_counter, sequence_counter + sequence_length)
-
+                
                 dset_images[slice_] = sequence
                 dset_labels[slice_] = sequence_length * [label]
                 dset_sid[slice_] = sequence_length * [subject_id]
                 dset_tid[slice_] = sequence_length * [trial_id]
                 dset_fid[slice_] = np.arange(sequence_length)
+                dset_ss[slice_] = sequence_length * [sleep_stage]
+                dset_sc[slice_] = sequence_length * [sleep_cycle]
+                dset_etime[slice_] = sequence_length * [etime]
 
                 sequence_counter += sequence.shape[0]
 

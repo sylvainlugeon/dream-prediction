@@ -12,8 +12,9 @@ from torch import nn
 from torch.utils.data import DataLoader, random_split
 
 sys.path.append('/home/lugeon/eeg_project/scripts')
-from training.representation import models, losses, datasets, cl_transforms
+from training.representation import models, losses
 from training.representation.early_stopping import EarlyStopping
+from training.dataset import datasets, cl_transforms
 from interaction.interaction import ask_for_config
 
 random.seed(0)
@@ -64,9 +65,14 @@ def train_routine(model: nn.Module,
             output_batch = output_batch.to(device, dtype=torch.float)
             
             output_type = train_loader.dataset.dataset.output_type
+                        
+            # forward pass for reconstruction
+            if output_type in {'none'}:
+                prediction = model(input_batch)
+                loss = criterion(prediction, input_batch)
             
             # forward pass for traditional learning
-            if output_type in {'label', 'last_frame'}:
+            elif output_type in {'label', 'next_frame'}:
                 prediction = model(input_batch)
                 loss = criterion(prediction, output_batch)
                 
@@ -96,8 +102,13 @@ def train_routine(model: nn.Module,
                 input_batch = input_batch.to(device, dtype=torch.float)
                 output_batch = output_batch.to(device, dtype=torch.float)
                 
-                # forward pass only   
-                if output_type in {'label', 'last_frame'}:     
+                # forward pass for reconstruction
+                if output_type in {'none'}:
+                    prediction = model(input_batch)
+                    loss = criterion(prediction, input_batch)
+                
+                # forward pass for traditional learning  
+                elif output_type in {'label', 'next_frame'}:     
                     prediction = model(input_batch)
                     loss = criterion(prediction, output_batch)
                     
@@ -146,7 +157,7 @@ def _process_train_config(config: str) -> Dict[str, Any]:
         config = yaml.load(file, Loader=yaml.FullLoader)
     
     if ask_for_config(config): pass
-    else: return
+    else: raise RuntimeError('User stopped the program.')
         
     save_dir = config['save_dir']
     

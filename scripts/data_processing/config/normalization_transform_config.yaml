@@ -1,7 +1,7 @@
 # Configuration file for normalizing frequency signal
-root_dir: /mlodata1/lugeon/dream_data/processed/healthy/freq
-output_dir: /mlodata1/lugeon/dream_data/processed/healthy/norm
-subject_pattern: 'H*'
+root_dir: /mlodata1/lugeon/dream_data/processed/madison_nrem/freq
+output_dir: /mlodata1/lugeon/dream_data/processed/madison_nrem/norm
+subject_pattern: 'M*'
 
 norm_opts:
   log: True

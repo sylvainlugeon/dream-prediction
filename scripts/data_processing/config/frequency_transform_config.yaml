@@ -1,16 +1,18 @@
 # Configuration file for processing eeg
-root_dir: /mlodata1/lugeon/dream_data/chuv/raw
-read_format: h5py
-output_dir: /mlodata1/lugeon/dream_data/processed/healthy/freq
+root_dir: /mlodata1/lugeon/dream_data/chuv/healthy
+read_format: scipy
+signal_name: datavr_2min
+transpose: True # matrix should be of shape (n_samples x n_electrodes)
+output_dir: /mlodata1/lugeon/dream_data/processed/madison_nrem/freq
 
 filter_opts:
-  subject_pattern: 'H*'
-  data_pattern: '*.mat'
+  subject_pattern: 'M*'
+  data_pattern: '*_NREM_*.mat'
   n_electrodes: 257
 
 bw_power_opts:
   sampling_frequency: 500
-  time_period: 120
+  time_period: -1
   time_window: 2
   time_shift: 0.5
   bandwidths:

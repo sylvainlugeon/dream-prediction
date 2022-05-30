@@ -10,6 +10,7 @@ import tqdm
 import argparse
 import traceback
 import logging
+import scipy.io as sio
 
 sys.path.append('/home/lugeon/eeg_project/scripts')
 from data_processing.bandwidths_power import bandwidths_power
@@ -29,7 +30,13 @@ def main():
     transform_by_subject(**config)
 
 
-def transform_by_subject(root_dir, read_format, output_dir, filter_opts, bw_power_opts):
+def transform_by_subject(root_dir, 
+                         read_format, 
+                         signal_name, 
+                         transpose, 
+                         output_dir, 
+                         filter_opts, 
+                         bw_power_opts):
 
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
@@ -51,7 +58,7 @@ def transform_by_subject(root_dir, read_format, output_dir, filter_opts, bw_powe
         signals = []
         for file in eeg_files:
             try:
-                signal = _read_time_signal(file, read_format, n_electrodes)
+                signal = _read_time_signal(file, read_format, signal_name, transpose, n_electrodes)
                 signals.append(signal)
             
             except Exception as e:
@@ -64,17 +71,23 @@ def transform_by_subject(root_dir, read_format, output_dir, filter_opts, bw_powe
 
     print('Done.\n')
     
-def _read_time_signal(file_path, read_format, n_electrodes):
+def _read_time_signal(file_path, read_format, signal_name, transpose, n_electrodes):
     
     if read_format == 'h5py':
             with h5py.File(file_path,'r') as file:
-                time_signal = np.array(file['datavr'])
+                time_signal = np.array(file[signal_name])
                 
-                assert time_signal.shape[1] == n_electrodes, \
-                       f'Signal at {file_path} has {time_signal.shape[1]} dimension, ' \
-                       f'but should have {n_electrodes}.'
+    elif read_format == 'scipy':
+        time_signal = sio.loadmat(file_path)[signal_name]
                 
     else: raise NotImplementedError(f'Format {read_format} is not implemented.')
+    
+    if transpose:
+        time_signal = time_signal.T
+    
+    assert time_signal.shape[1] == n_electrodes, \
+        f'Signal at {file_path} has {time_signal.shape[1]} dimension, ' \
+        f'but should have {n_electrodes}.'
         
     return time_signal
 
