@@ -1,6 +1,26 @@
 import torch
 from torch import nn
+from torch import Tensor
 import torch.nn.functional as F
+from typing import List
+
+
+class AdverserialLoss(nn.Module):
+    def __init__(self, weight = None):
+        super().__init__()
+        
+        self.class_criterion = nn.CrossEntropyLoss(weight)
+        self.subject_criterion = nn.CrossEntropyLoss() # TODO: add weights for subject loss
+        
+    def forward(self, prediction, groundtruth):
+        class_pred, subject_pred = prediction
+        class_gt, subject_gt = groundtruth
+        
+        class_loss = self.class_criterion(class_pred, class_gt)
+        subject_loss = self.subject_criterion(subject_pred, subject_gt)
+        
+        return torch.stack((class_loss, subject_loss))
+        
 
 class ContrastiveLoss(nn.Module):
     def __init__(self, temperature: float = 0.5):
@@ -67,3 +87,32 @@ class ContrastiveLoss(nn.Module):
                   
         # average over the batch
         return 1.0 / (2 * batch_size) * loss
+    
+    
+    
+class RunningLoss():
+    def __init__(self, 
+                 divider: int,
+                 cardinality: int = 1,
+                 watch_idx: List[int] = [0]):
+        
+        self.divider = divider
+        self.cardinality = cardinality
+        self.watch_idx = watch_idx
+        self.run_loss = torch.zeros(self.cardinality)
+        
+    def update(self, add_values: Tensor):
+        self.run_loss += add_values.detach().cpu()
+            
+    def export(self, format: str = '.4f'):
+        export = self.run_loss / self.divider
+        if self.cardinality > 1:
+            return f"[{', '.join([f'{e.item():{format}}' for e in export])}]"
+        else:
+            return f'{export.item():{format}}'
+        
+    def watch(self):
+        return self.run_loss[self.watch_idx].sum().item() / self.divider
+            
+    def reset(self):
+        self.run_loss = torch.zeros(self.cardinality)

@@ -8,3 +8,7 @@ from .transformers import (
     MaskedAutoEncoder
 )
 
+from .fine_tuner import (
+    FineTuner
+)
+

@@ -1,41 +1,45 @@
-save_dir: ./result/arch_comparison/next_frame_baseline
+save_dir: ./result/transformers/masked_auto_encoder_mask9_ft_test_adv
 
 data:
   dset_name: EEG_Image_Batch_Dataset
   dset_kwargs:
-    hdf5_file: /home/lugeon/eeg_project/dataset_baseline_nrem.h5
+    hdf5_file: /mlodata1/lugeon/dream_data/processed/madison_20sec/dataset_nrem_binary.h5
     window: 10
     slide: 5
     shuffle: True
     batch_size: 32
     transforms: null
-    return_metadata: False
-    output_type: next_frame
+    return_metadata: True
+    output_type: label
     next_frame_index: 4
+    exclude_subject: [5]
   fraction: 0.1
 
 model:
-  name: LinearEncoderDecoder
+  name: FineTuner
   kwargs:
-    dropout: 0.5
+    result_dir: /home/lugeon/eeg_project/scripts/training/representation/result/arch_comparison/next_frame_baseline
     encoding_dim: 512
-    n_channels: 5
-    image_dim: 32
-    n_frames: 10
+    n_classes: 2
+    dropout: 0.5
+    adverserial: True
+    adv_strength: 0.0
+    n_adv_classes: 7
 
-n_epochs: 100
+n_epochs: 10
 reshuffle: True
 device: 'cuda:0'
     
 loss: 
-  name: MSELoss
+  name: AdverserialLoss
   kwargs:
-    reduction: mean
+    weight: [1.45, 0.76]
+  n_losses: 2
 
 optim: 
   name: Adam
   kwargs:
-    lr: 1.e-4
+    lr: 1.e-5
 
 scheduler:
   enabled: True

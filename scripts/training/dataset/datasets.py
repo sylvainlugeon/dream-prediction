@@ -20,7 +20,7 @@ class EEG_Image_Batch_Dataset(Dataset):
                  return_metadata: bool = False,
                  exclude_subject: Set[int] = set([]),
                  output_type: str = 'label',
-                 next_frame_index: int = 1):
+                 next_frame_index: int = 4):
         """
         Args:
             hdf5_file (str): Path to the hdf5 file that contains the data.
@@ -30,7 +30,7 @@ class EEG_Image_Batch_Dataset(Dataset):
             batch_size (int): Number of samples in a batch. If set to None, get all the data in a single batch.
             return_metadata (bool): False
             exclude_subject (List[int]): Indices of subject to exclude from the dataset. Defaults to empty.
-            output_type (str, optional): Can be set to 'label' or 'next_frame'. Defaults to 'label'.
+            output_type (str, optional): Can be set to {none, label, next_frame, transform}. Defaults to 'label'.
             next_frame_index (int): Index of the next frame to output (1 correspond to the frame just after the window)
         """
         
@@ -79,18 +79,17 @@ class EEG_Image_Batch_Dataset(Dataset):
         
         images, labels, frame_indices, this_batch_size = self._select_data(index)
 
-
         if self.output_type == 'none':
-                    batch = (images, # all frames
-                            np.array([])) # no output
-                    
+            batch = (images, # all frames
+                    np.array([])) # no output
+            
         if self.output_type == 'label':
             batch = (images, # all frames
-                     labels[:, 0]) # one label per video
+                     labels[:, 0].astype(int)) # one label per video
         
         if self.output_type == 'next_frame':
             batch =  (images[:, :-1], # all frames except last one
-                      images[:, -1].reshape(this_batch_size, -1)) # last frame
+                      images[:, -1].reshape(this_batch_size, -1)) # next frame
             
         if self.output_type == 'transform':
             batch = (self.transforms[0]['f'](images, **self.transforms[0]['kwargs']), 
@@ -102,23 +101,23 @@ class EEG_Image_Batch_Dataset(Dataset):
             
             subject_id = self.subject_id[frame_indices]
             subject_id = subject_id.reshape(this_batch_size, nb_frames) # reshape in batch
-            subject_id = subject_id[:, 0] # one subject ID per video
+            subject_id = subject_id[:, 0].astype(int) # one subject ID per video
             
             sleep_stage = self.sleep_stage[frame_indices]
             sleep_stage = sleep_stage.reshape(this_batch_size, nb_frames)
-            sleep_stage = sleep_stage[:, 0]
+            sleep_stage = sleep_stage[:, 0].astype(int)
             
             trial_id = self.trial_id[frame_indices]
             trial_id = trial_id.reshape(this_batch_size, nb_frames)
-            trial_id = trial_id[:, 0]
+            trial_id = trial_id[:, 0].astype(int)
             
             frame_id = self.frame_id[frame_indices]
             frame_id = frame_id.reshape(this_batch_size, nb_frames)
-            frame_id = frame_id[:, 0]
+            frame_id = frame_id[:, 0].astype(int)
             
             etime = self.elapsed_time[frame_indices]
             etime = etime.reshape(this_batch_size, nb_frames)
-            etime = etime[:, 0]
+            etime = etime[:, 0].astype(int)
             
             batch = batch + ( (subject_id, trial_id, frame_id, sleep_stage, etime), )
             
@@ -210,9 +209,13 @@ class EEG_Image_Batch_Dataset(Dataset):
         # discard non valid starting frame, given slide and window
         df = df.merge(frames_per_trial, how='left')
         df['start_frame'] = df.fid % self.slide == 0 # keep modulo of slide
-        df['valid_start'] = df.fid <= df.trial_len + 1 \
-            - self.window \
-            - self.next_frame_index # discard frames at the end of trial
+        
+        # discard frames at the end of trial
+        if self.output_type == 'next_frame':
+            limit = df.trial_len + 1 - self.window - self.next_frame_index
+        else:
+            limit = df.trial_len + 1 - self.window
+        df['valid_start'] = df.fid <= limit 
             
         df = df[df.start_frame & df.valid_start]
         

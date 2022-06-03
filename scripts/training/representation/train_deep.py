@@ -1,5 +1,7 @@
+from logging import critical
 import sys
 import argparse
+from importlib_metadata import metadata
 import yaml
 import time
 import os
@@ -13,6 +15,7 @@ from torch.utils.data import DataLoader, random_split
 
 sys.path.append('/home/lugeon/eeg_project/scripts')
 from training.representation import models, losses
+from losses import RunningLoss
 from training.representation.early_stopping import EarlyStopping
 from training.dataset import datasets, cl_transforms
 from interaction.interaction import ask_for_config
@@ -31,7 +34,7 @@ def main() -> None:
 
     print('Start training...')
     train_routine(**train_routine_kwargs)
-    
+        
 
 def train_routine(model: nn.Module, 
                   n_epochs: int, 
@@ -40,6 +43,7 @@ def train_routine(model: nn.Module,
                   reshuffle: bool,
                   optimizer: torch.optim.Optimizer, 
                   criterion: nn.Module, 
+                  n_losses: int,
                   early_stopping: Union[None, EarlyStopping], 
                   scheduler: Union[None, object],
                   device: torch.device, 
@@ -49,97 +53,78 @@ def train_routine(model: nn.Module,
         p.requires_grad = True
         
     model.to(device) 
+    output_type = train_loader.dataset.dataset.output_type
+    metadata = train_loader.dataset.dataset.return_metadata
+    
+    training_loss = RunningLoss(len(train_loader.dataset), n_losses)
+    validation_loss = RunningLoss(len(val_loader.dataset), n_losses)
     
     for epoch in range(n_epochs):
-        
-        training_loss = 0
-        validation_loss = 0
         
         # training
         model.train()
                 
-        for input_batch, output_batch in tqdm.tqdm(train_loader, ncols=70):
+        for batch in tqdm.tqdm(train_loader, ncols=70):
+            
+            if metadata: 
+                input_batch, output_batch, metadata = batch
+                sid_batch, _, _, _, _ = metadata
+                sid_batch = sid_batch.to(device)
+            else: input_batch, output_batch = batch
                         
             # send to device
-            input_batch = input_batch.to(device, dtype=torch.float) 
-            output_batch = output_batch.to(device, dtype=torch.float)
+            input_batch = input_batch.to(device) 
+            output_batch = output_batch.to(device)
             
-            output_type = train_loader.dataset.dataset.output_type
+            if metadata: output_batch = (output_batch, sid_batch,)
+            
+            # forward pass
+            loss = _forward_pass(input_batch, output_batch, model, criterion, output_type)
+            training_loss.update(loss)
                         
-            # forward pass for reconstruction
-            if output_type in {'none'}:
-                prediction = model(input_batch)
-                loss = criterion(prediction, input_batch)
-            
-            # forward pass for traditional learning
-            elif output_type in {'label', 'next_frame'}:
-                prediction = model(input_batch)
-                loss = criterion(prediction, output_batch)
-                
-            # forward pass for contrastive learning
-            elif output_type in {'transform'}:
-                first_transformed = model(input_batch)   
-                second_transformed = model(output_batch)
-                loss = criterion(first_transformed, second_transformed)
-            
-            else:
-                raise NotImplementedError
-            
             # backward pass
             if epoch > 0: # don't update weights at first epoch, to get the baseline loss
                 optimizer.zero_grad()
-                loss.backward()
+                loss.sum().backward()
                 optimizer.step()
-            
-            training_loss += loss.item()
-            
+               
         # evaluate 
         with torch.no_grad():
             model.eval()
-            for input_batch, output_batch in iter(val_loader):
+            for batch in iter(val_loader):
+                
+                if metadata: 
+                    input_batch, output_batch, metadata = batch
+                    sid_batch, _, _, _, _ = metadata
+                    sid_batch = sid_batch.to(device)
+                else: input_batch, output_batch = batch
                 
                 # send to device
-                input_batch = input_batch.to(device, dtype=torch.float)
-                output_batch = output_batch.to(device, dtype=torch.float)
+                input_batch = input_batch.to(device)
+                output_batch = output_batch.to(device)
                 
-                # forward pass for reconstruction
-                if output_type in {'none'}:
-                    prediction = model(input_batch)
-                    loss = criterion(prediction, input_batch)
+                if metadata: output_batch = (output_batch, sid_batch,)
                 
-                # forward pass for traditional learning  
-                elif output_type in {'label', 'next_frame'}:     
-                    prediction = model(input_batch)
-                    loss = criterion(prediction, output_batch)
-                    
-                # forward pass for contrastive learning
-                elif output_type in {'transform'}:
-                    first_transformed = model(input_batch)   
-                    second_transformed = model(output_batch)
-                    loss = criterion(first_transformed, second_transformed)
-                
-                else:
-                    raise NotImplementedError
-                
-                validation_loss += loss.item()
-                
-        training_loss = training_loss / len(train_loader.dataset)
-        validation_loss = validation_loss / len(val_loader.dataset)
+                # forward pass
+                loss = _forward_pass(input_batch, output_batch, model, criterion, output_type)                    
+                validation_loss.update(loss)
         
-        print(f'Epoch {epoch:>4} **' 
-              f'Train loss: {training_loss:>10.4f} ** '
-              f'Val loss: {validation_loss:>10.4f}')
+        print(f'Epoch {epoch:>4} ** ' 
+              f'Train loss: {training_loss.export():>20} ** '
+              f'Val loss: {validation_loss.export():>20}')
+        
+        watched_loss = validation_loss.watch()
                 
         # if early stopping is enabled
         if early_stopping:
-            early_stopping(validation_loss, model)
+            early_stopping(watched_loss, model)
             if early_stopping.early_stop:
                 print("Early stopping")
                 break
         
         # if scheduler is enabled
         if scheduler: 
-            scheduler.step(validation_loss)
+            scheduler.step(watched_loss)
             
         if reshuffle:
             train_loader.dataset.dataset.reshuffle()
@@ -148,7 +133,37 @@ def train_routine(model: nn.Module,
         with open(f'{save_dir}/loss.txt', 'a') as f:
             if epoch == 0:
                 f.write(f'epoch training validation\n')
-            f.write(f'{epoch} {training_loss:.4f} {validation_loss:.4f}\n')
+            f.write(f'{epoch} {training_loss.export()} {validation_loss.export()}\n')
+            
+        training_loss.reset()
+        validation_loss.reset()
+            
+            
+def _forward_pass(input, output, model, criterion, output_type):
+    
+    # forward pass for reconstruction
+    if output_type in {'none'}:
+        prediction = model(input)
+        loss = criterion(prediction, input)
+    
+    # forward pass for traditional learning
+    elif output_type in {'label', 'next_frame'}:
+        prediction = model(input)
+        loss = criterion(prediction, output)
+        
+    # forward pass for contrastive learning
+    elif output_type in {'transform'}:
+        first_transformed = model(input)   
+        second_transformed = model(output)
+        loss = criterion(first_transformed, second_transformed)
+    
+    else:
+        raise NotImplementedError
+    
+    if isinstance(criterion, losses.AdverserialLoss): pass
+    else: loss = (loss, )
+    
+    return loss 
             
         
 def _process_train_config(config: str) -> Dict[str, Any]:
@@ -176,6 +191,9 @@ def _process_train_config(config: str) -> Dict[str, Any]:
     
     with open(f'{save_dir}/train_config.yaml', 'w') as f:
         f.write(yaml.dump(config))
+        
+    # get device
+    device = torch.device(config['device'])
     
     # get model from model name
     model_function = getattr(models, config['model']['name'])
@@ -190,6 +208,9 @@ def _process_train_config(config: str) -> Dict[str, Any]:
     assert loss_function is not None, (
         f'Could not find a loss function that corresponds to {loss_name}')
 
+    if 'weight' in config['loss']['kwargs'].keys(): # send weights on device
+        config['loss']['kwargs']['weight'] = \
+            torch.Tensor(config['loss']['kwargs']['weight']).to(device)
     criterion = loss_function(**config['loss']['kwargs'])
     
     # get optimizer from optimizer name
@@ -212,6 +233,16 @@ def _process_train_config(config: str) -> Dict[str, Any]:
     # get data loaders
     train_loader, val_loader = _get_loaders(**config['data'])
     
+    
+    if isinstance(model, models.FineTuner):
+        if model.adverserial:
+            assert isinstance(criterion, losses.AdverserialLoss), (
+                f'Fine-tuning model enables adverserial training, but loss {criterion} does not support it'
+            )
+            assert train_loader.dataset.dataset.return_metadata, (
+                'Fine-tuning model enables adverserial training, but the dataset returns no adverserial metadata'
+            )
+    
     train_routine_kwargs = {}
     train_routine_kwargs['model'] = model
     train_routine_kwargs['n_epochs'] = config['n_epochs']
@@ -220,9 +251,10 @@ def _process_train_config(config: str) -> Dict[str, Any]:
     train_routine_kwargs['reshuffle'] = config['reshuffle']
     train_routine_kwargs['optimizer'] = optimizer
     train_routine_kwargs['criterion'] = criterion
+    train_routine_kwargs['n_losses'] = config['loss']['n_losses']
     train_routine_kwargs['early_stopping'] = early_stopping
     train_routine_kwargs['scheduler'] = scheduler
-    train_routine_kwargs['device'] = torch.device(config['device'])
+    train_routine_kwargs['device'] = device
     train_routine_kwargs['save_dir'] = save_dir
     
     return train_routine_kwargs
@@ -248,7 +280,6 @@ def _get_loaders(dset_name: str,
 
     
     return train_loader, val_loader
-    
 
 if __name__ == '__main__':
     main()

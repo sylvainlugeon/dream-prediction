@@ -1,4 +1,4 @@
-save_dir: ./result/transformers/masked_auto_encoder_mask9
+save_dir: ./result/transformers/masked_auto_encoder_mask95_drop5
 
 data:
   dset_name: EEG_Image_Batch_Dataset
@@ -23,11 +23,13 @@ model:
     space_patch_size: 4
     time_patch_size: 2
     emb_size: 512
-    masking_ratio: 0.9
+    masking_ratio: 0.95
     encoder_depth: 8
     decoder_depth: 2
+    drop_p: 0.5
 
-n_epochs: 100
+
+n_epochs: 300
 reshuffle: True
 device: 'cuda:0'
     
@@ -39,7 +41,7 @@ loss:
 optim: 
   name: Adam
   kwargs:
-    lr: 1.e-5
+    lr: 1.e-4
 
 scheduler:
   enabled: True
