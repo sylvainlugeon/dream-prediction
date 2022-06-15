@@ -53,7 +53,8 @@ class PatchTransform(nn.Module):
         x = torch.flatten(x, start_dim=1, end_dim=3) # (batch_size, n_patches, emb_size)
         
         return x
-    
+
+
 class PixelTransform(nn.Module):
     """
     Transform a sequences of embedded patches back into the pixels space.
@@ -322,15 +323,20 @@ class MaskedAutoEncoder(nn.Module):
         assert space_dim % space_patch_size == 0, 'Space patch size must divide space dimension'
         assert time_dim % time_patch_size == 0, 'Time patch size must divide time dimension'
         assert emb_size % 2 == 0, 'Embedding size must be a factor of 2'
+
+        self.emb_size = emb_size
         
         self.encoder = AttentionNet(emb_size, encoder_depth, **kwargs)
         self.decoder = AttentionNet(emb_size, decoder_depth, **kwargs)
         
-        time_n_patches = int(time_dim / time_patch_size)
-        space_n_patches = int(space_dim / space_patch_size) ** 2
+        self.time_patch_size = time_patch_size
+        self.space_patch_size = space_patch_size
         
-        self.n_patches = time_n_patches * space_n_patches
-        self.pos_adder = PositionalAdder(emb_size, time_n_patches, space_n_patches)
+        self.time_n_patches = int(time_dim / time_patch_size)
+        self.space_n_patches = int(space_dim / space_patch_size) ** 2
+        
+        self.n_patches = self.time_n_patches * self.space_n_patches
+        self.pos_adder = PositionalAdder(emb_size, self.time_n_patches, self.space_n_patches)
         
         self.patch_transform = PatchTransform(emb_size, 
                                               in_channels, 

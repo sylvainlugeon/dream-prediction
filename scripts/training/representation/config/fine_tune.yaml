@@ -1,4 +1,4 @@
-save_dir: ./result/transformers/masked_auto_encoder_mask9_ft_test_adv
+save_dir: /home/lugeon/eeg_project/results/loso_ft/autoencoder_newdrop8_adv05
 
 data:
   dset_name: EEG_Image_Batch_Dataset
@@ -11,24 +11,26 @@ data:
     transforms: null
     return_metadata: True
     output_type: label
-    next_frame_index: 4
-    exclude_subject: [5]
+    next_frame_index: null
+    exclude_subject: []
   fraction: 0.1
 
 model:
   name: FineTuner
   kwargs:
-    result_dir: /home/lugeon/eeg_project/scripts/training/representation/result/arch_comparison/next_frame_baseline
+    result_dir: /home/lugeon/eeg_project/results/transformers/autoencoder_mask9
     encoding_dim: 512
     n_classes: 2
-    dropout: 0.5
+    dropout: 0.8
     adverserial: True
-    adv_strength: 0.0
+    adv_strength: 0.05
     n_adv_classes: 7
+    freeze: False
 
-n_epochs: 10
-reshuffle: True
+n_epochs: 200
+reshuffle: False
 device: 'cuda:0'
+verbose: False
     
 loss: 
   name: AdverserialLoss
@@ -42,22 +44,22 @@ optim:
     lr: 1.e-5
 
 scheduler:
-  enabled: True
+  enabled: False
   name: ReduceLROnPlateau
   kwargs:
     mode: min
     factor: 0.1 
-    patience: 10
-    min_lr: 1.e-7
+    patience: 20
+    min_lr: 1.e-6
     threshold: 1.e-4
     verbose: True
 
 early_stop:
   enabled: True
   kwargs:
-    patience: 20
+    patience: 200
     delta: 0
     path: 'checkpoint.pt'
-    verbose: True
+    verbose: False
 
 

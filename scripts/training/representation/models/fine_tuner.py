@@ -1,13 +1,14 @@
 import torch
 import torch.nn as nn
 from torch.autograd import Function
-
 import yaml
 import sys
 
-
-sys.path.append('/home/lugeon/eeg_project/scripts')
+sys.path.append('/mlodata1/lugeon/eeg_project/scripts')
 from training.representation import models
+
+def test():
+    pass
     
 ###################################################
 #          Model container for fine-tuning        #
@@ -20,9 +21,10 @@ class FineTuner(nn.Module):
                  encoding_dim: int, 
                  n_classes: int, 
                  dropout: float, 
-                 adverserial: bool = False,
-                 adv_strength: float = 0.2,
-                 n_adv_classes: int = 20):
+                 adverserial: bool,
+                 adv_strength: float,
+                 n_adv_classes: int,
+                 freeze: bool):
         
         super(FineTuner, self).__init__()
         
@@ -33,15 +35,18 @@ class FineTuner(nn.Module):
         model_function = getattr(models, train_config['model']['name'])
         self.model = model_function(**train_config['model']['kwargs'])
         self.model.load_state_dict(torch.load(f'{result_dir}/checkpoint.pt'))
+        self._set_dropout(self.model, dropout)
         
         self.mean_agg = False
-
         if isinstance(self.model, models.MaskedAutoEncoder):
             self.model.masking_ratio = 0.
             self.mean_agg = True
+            
+        if freeze:
+            for param in self.model.parameters():
+                param.requires_grad = False
         
         self.clf = nn.Linear(encoding_dim, n_classes)
-        self.dropout = nn.Dropout(dropout)
         self.adverserial = adverserial
         
         if self.adverserial:
@@ -55,7 +60,6 @@ class FineTuner(nn.Module):
         if self.mean_agg:
             encoding = encoding.mean(1)
         
-        encoding = self.dropout(encoding)
         output = self.clf(encoding)
         
         if self.adverserial:
@@ -68,7 +72,13 @@ class FineTuner(nn.Module):
     def encode(self, x):
         return self.model.encode(x)
     
-    
+    @staticmethod
+    def _set_dropout(model, new_drop_rate):
+        for _, child in model.named_children():
+            if isinstance(child, torch.nn.Dropout):
+                child.p = new_drop_rate
+            FineTuner._set_dropout(child, new_drop_rate)
+        
     
 class ReverseLayerF(Function):
     '''

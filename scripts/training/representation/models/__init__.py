@@ -12,3 +12,7 @@ from .fine_tuner import (
     FineTuner
 )
 
+from .adverserial import (
+    AdverserialAutoencoder
+)
+

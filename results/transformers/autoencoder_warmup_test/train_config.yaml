@@ -1,0 +1,64 @@
+data:
+  dset_kwargs:
+    batch_size: 32
+    hdf5_file: /mlodata1/lugeon/dream_data/processed/baseline_nrem/dataset.h5
+    next_frame_index: null
+    output_type: none
+    return_metadata: true
+    shuffle: true
+    slide: 5
+    transforms: null
+    window: 10
+  dset_name: EEG_Image_Batch_Dataset
+  fraction: 0.1
+device: cuda:0
+early_stop:
+  enabled: true
+  kwargs:
+    delta: 0.0001
+    path: checkpoint.pt
+    patience: 20
+    verbose: true
+loss:
+  kwargs:
+    adv_loss: CrossEntropyLoss
+    adv_loss_kwargs:
+      reduction: mean
+    main_loss: MSELoss
+    main_loss_kwargs:
+      reduction: mean
+  n_losses: 2
+  name: AdverserialLoss
+model:
+  kwargs:
+    adv_strength: 0.01
+    autoencoder_kwargs:
+      decoder_depth: 2
+      drop_p: 0.0
+      emb_size: 512
+      encoder_depth: 8
+      in_channels: 5
+      masking_ratio: 0.9
+      space_dim: 32
+      space_patch_size: 4
+      time_dim: 10
+      time_patch_size: 2
+    n_adv_classes: 20
+  name: AdverserialAutoencoder
+n_epochs: 300
+optim:
+  kwargs:
+    lr: 0.0001
+  name: AdamW
+reshuffle: false
+save_dir: /mlodata1/lugeon/eeg_project/results/transformers/autoencoder_warmup_test
+scheduler:
+  enabled: true
+  kwargs:
+    T_0: 10
+    T_mult: 1
+    verbose: true
+  name: CosineAnnealingWarmRestarts
+  step_value: none
+  warmup: 5
+verbose: true

@@ -1,0 +1,67 @@
+save_dir: /home/lugeon/eeg_project/results/cnn/ezgi_best
+
+data:
+  dset_name: EEG_Image_Batch_Dataset
+  dset_kwargs:
+    hdf5_file: /home/lugeon/eeg_project/dataset_baseline_nrem.h5
+    window: 10
+    slide: 5
+    shuffle: True
+    batch_size: 32
+    transforms: null
+    return_metadata: False
+    output_type: next_frame
+    next_frame_index: 1
+  fraction: 0.1
+
+model:
+  name: EncoderDecoder
+  kwargs:
+    dropout: 0.8
+    kernel_dim: 3
+    features: vgg
+    time_aggregation: conv
+    time_filter_dim: 5
+    time_n_filters: 1
+    encoding_dim: 512
+    n_decoder_layers: 1
+    n_channels: 5
+    image_dim: 32
+    n_frames: 10
+
+n_epochs: 300
+reshuffle: False
+device: 'cuda:0'
+verbose: True
+    
+loss: 
+  name: MSELoss
+  kwargs:
+    reduction: mean
+  n_losses: 1
+
+optim: 
+  name: Adam
+  kwargs:
+    lr: 1.e-5
+
+scheduler:
+  enabled: False
+  name: ReduceLROnPlateau
+  kwargs:
+    mode: min
+    factor: 0.1 
+    patience: 10
+    min_lr: 1.e-5
+    threshold: 1.e-4
+    verbose: True
+
+early_stop:
+  enabled: True
+  kwargs:
+    patience: 20
+    delta: 0
+    path: 'checkpoint.pt'
+    verbose: True
+
+

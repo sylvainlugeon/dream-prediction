@@ -85,8 +85,8 @@ class EncoderDecoder(nn.Module):
             dim_after_time_agg = (n_frames - (time_filter_dim - 1)) * time_n_filters 
             
         if time_aggregation == 'maxpool':
-            self.time_agg = nn.MaxPool3d(kernel_size = (time_filter_dim, 1, 1))
-            dim_after_time_agg = int(n_frames/time_filter_dim) * self.n_channels_out
+            self.time_agg = nn.MaxPool3d(kernel_size = (time_filter_dim, 1, 1), stride=1)
+            dim_after_time_agg = (n_frames - (time_filter_dim - 1)) * self.n_channels_out
             
         dim_after_time_agg *= self.feature_map_dim ** 2
         
@@ -174,10 +174,6 @@ class ConvolutionalEncoderDecoder(nn.Module):
                                     kernel_size = (time_filter_dim, 1, 1))
 
             dim_after_time_agg = (n_frames - (time_filter_dim - 1)) * time_n_filters 
-            
-        if time_aggregation == 'maxpool':
-            self.time_agg = nn.MaxPool3d(kernel_size = (time_filter_dim, 1, 1), stride=1)
-            dim_after_time_agg = (n_frames - (time_filter_dim - 1)) * self.n_channels_out
             
         dim_after_time_agg *= self.feature_map_dim ** 2
         
@@ -342,29 +338,6 @@ class ContrastiveLearningEncoder(nn.Module):
     
     def project(self, encoding):
         return self.projection_head(encoding)
-    
-    
-###################################################
-#          Model container for fine-tuning        #
-###################################################
-    
-class FineTuner(nn.Module):
-    
-    def __init__(self, features_model, encoding_dim, n_classes):
-        
-        super(FineTuner, self).__init__()
-        
-        self.features_model = copy.deepcopy(features_model)
-        self.clf = nn.Linear(encoding_dim, n_classes)
-        
-    def forward(self, x):
-        encoding = self.features_model.encode(x)
-        encoding = F.relu(encoding)
-        output = self.clf(encoding)
-        return output
-        
-    def encode(self, x):
-        return self.features_model.encode(x)
                     
     
 ##############################################

@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import h5py
 import random
-from typing import Dict, List, Set, Union, Any
+from typing import Dict, List, Union, Any
 from torch.utils.data import Dataset
 
 class EEG_Image_Batch_Dataset(Dataset):
@@ -18,9 +18,9 @@ class EEG_Image_Batch_Dataset(Dataset):
                  batch_size: Union[int, None], 
                  transforms: Union[List[Any], None] = None,
                  return_metadata: bool = False,
-                 exclude_subject: Set[int] = set([]),
+                 exclude_subject: List[int] = [],
                  output_type: str = 'label',
-                 next_frame_index: int = 4):
+                 next_frame_index: int = None):
         """
         Args:
             hdf5_file (str): Path to the hdf5 file that contains the data.
@@ -40,9 +40,16 @@ class EEG_Image_Batch_Dataset(Dataset):
             'Output_type must one of {none, label, next_frame, transform}'
             )
         assert transforms is None or len(transforms) == 2, 'Transforms must be None or have size 2'
-        assert (output_type == 'transform' and transforms is not None) or (output_type != 'transform'), (
-            'If output_type is "transform", transforms argument should not be None'
-        )
+        
+        if output_type == 'transform':   
+            assert transforms is not None, (
+                'If output_type is "transform", transforms argument should not be None')
+            
+        if output_type == 'next_frame':
+            assert next_frame_index is not None, (
+                'If output_type is "next_frame", "next_frame_index" should not be None'
+            )
+        
         
         super(EEG_Image_Batch_Dataset, self).__init__()
         
@@ -123,8 +130,9 @@ class EEG_Image_Batch_Dataset(Dataset):
             
         return batch
             
-    def set_exlude_subjects(self, new_subjects: Set[int]):
+    def set_exlude_subjects(self, new_subjects: List[int]):
         self.exclude_subject = new_subjects
+        self.starting_frames = self._get_starting_frames()
         self.batch_to_frames = self._get_batch_to_starting_frames() # re-compute batches
         
         return self
@@ -194,7 +202,8 @@ class EEG_Image_Batch_Dataset(Dataset):
         df = pd.DataFrame({
             'sid': self.subject_id, 
             'tid': self.trial_id, 
-            'fid': self.frame_id
+            'fid': self.frame_id,
+            'indexing': np.arange(len(self.frame_id))
             })
         
         # remove exluded subjects
@@ -220,5 +229,5 @@ class EEG_Image_Batch_Dataset(Dataset):
         df = df[df.start_frame & df.valid_start]
         
         # indices of valid starting frames 
-        return df.index.to_list()
+        return df.indexing.to_list()
         

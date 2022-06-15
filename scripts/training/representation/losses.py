@@ -2,24 +2,36 @@ import torch
 from torch import nn
 from torch import Tensor
 import torch.nn.functional as F
-from typing import List
+from typing import List, Dict, Any
 
 
 class AdverserialLoss(nn.Module):
-    def __init__(self, weight = None):
+    def __init__(self, 
+                 main_loss: str, 
+                 main_loss_kwargs: Dict[str, Any], 
+                 adv_loss: str, 
+                 adv_loss_kwargs: Dict[str, Any]):
         super().__init__()
+
+        main_loss_function = getattr(torch.nn, main_loss, None)
+        adv_loss_function = getattr(torch.nn, adv_loss, None)
         
-        self.class_criterion = nn.CrossEntropyLoss(weight)
-        self.subject_criterion = nn.CrossEntropyLoss() # TODO: add weights for subject loss
+        assert (main_loss_function is not None), (
+            f'Could not find a loss function that corresponds to {main_loss}')
+        assert (adv_loss_function is not None), (
+            f'Could not find a loss function that corresponds to {adv_loss}')
+        
+        self.main_criterion = main_loss_function(**main_loss_kwargs)
+        self.adv_criterion = adv_loss_function(**adv_loss_kwargs)
         
     def forward(self, prediction, groundtruth):
-        class_pred, subject_pred = prediction
-        class_gt, subject_gt = groundtruth
+        main_pred, adv_pred = prediction
+        main_gt, adv_gt = groundtruth
         
-        class_loss = self.class_criterion(class_pred, class_gt)
-        subject_loss = self.subject_criterion(subject_pred, subject_gt)
+        main_loss = self.main_criterion(main_pred, main_gt)
+        adv_loss = self.adv_criterion(adv_pred, adv_gt)
         
-        return torch.stack((class_loss, subject_loss))
+        return torch.stack((main_loss, adv_loss))
         
 
 class ContrastiveLoss(nn.Module):
@@ -89,7 +101,6 @@ class ContrastiveLoss(nn.Module):
         return 1.0 / (2 * batch_size) * loss
     
     
-    
 class RunningLoss():
     def __init__(self, 
                  divider: int,
@@ -107,7 +118,7 @@ class RunningLoss():
     def export(self, format: str = '.4f'):
         export = self.run_loss / self.divider
         if self.cardinality > 1:
-            return f"[{', '.join([f'{e.item():{format}}' for e in export])}]"
+            return f"[{','.join([f'{e.item():{format}}' for e in export])}]"
         else:
             return f'{export.item():{format}}'
         
