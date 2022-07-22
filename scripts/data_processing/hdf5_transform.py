@@ -1,4 +1,3 @@
-from lib2to3.pgen2.pgen import DFAState
 import numpy as np
 import pandas as pd
 import h5py
@@ -7,8 +6,9 @@ import argparse
 import yaml
 import sys
 import tqdm
+from typing import List, Any, Dict, Tuple
 
-sys.path.append('/home/lugeon/eeg_project/scripts')
+sys.path.append('/mlodata1/lugeon/eeg_project/scripts')
 from interaction.interaction import ask_for_config
 
 
@@ -26,7 +26,19 @@ def main():
     transform_by_subject(**config)
 
 
-def transform_by_subject(root_dir, output_file, metadata, subject_pattern='*'):
+def transform_by_subject(root_dir: str, 
+                         output_file: str, 
+                         metadata: str, 
+                         subject_pattern: str) -> None:
+    """ Create an HDF5 dataset from the images of the archives contained in 
+    the root directory
+    
+    Args:
+        root_dir (str): root directory with the subject-specific numpy archives
+        output_file (str): where to write the HDF5 dataset
+        metadata (str): metadata file used for creating the dataset
+        subject_pattern (str): pattern for filtering subjects 
+    """
 
     print('\nCreate an HDF5 dataset with images...')
 
@@ -104,7 +116,17 @@ def transform_by_subject(root_dir, output_file, metadata, subject_pattern='*'):
     print(f'Dataset {output_file} created with {n_frames} frames.\n')
 
 
-def _get_dataset_shape(subjects, labels_map):
+def _get_dataset_shape(subjects: List[str], 
+                       labels_map: Dict[str, Any]) -> Tuple[int, int, int]:
+    """ Compute the shape of the dataset, prior to its creation
+
+    Args:
+        subjects (List[str]): list of subject numpy archives
+        labels_map (Dict[str, Any]): mapping from the trials to the labels
+
+    Returns:
+        Tuple[int, int, int]: number of frames, pixels per frame (one dim) and channels
+    """
 
     n_frames, n_gridpoints, n_channels = 0, 0, 0
     for subject_id, subject in tqdm.tqdm(enumerate(subjects), total=len(subjects), ncols=70):

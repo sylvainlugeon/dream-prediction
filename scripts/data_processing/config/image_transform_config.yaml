@@ -1,10 +1,15 @@
 # Configuration file for transforming frequencies into images
-root_dir: /mlodata1/lugeon/dream_data/processed/healthy_20sec/norm
-output_dir: /mlodata1/lugeon/dream_data/processed/healthy_20sec/images
-subject_pattern: 'H*'
+root_dir: /mlodata1/lugeon/dream_data/processed/madison_nrem_binary/norm_cal
+output_dir: /mlodata1/lugeon/dream_data/processed/madison_nrem_binary/images_cal
+subject_pattern: 'M*'
 
 e_locs_path: /mlodata1/lugeon/dream_data/chuv/metadata/original/channelcoords.mat
 e_locs_read_format: scipy
+
+e_upper_limit:
+  x: null
+  y: null
+  z: null
 
 gen_images_opts:
   n_gridpoints: 32

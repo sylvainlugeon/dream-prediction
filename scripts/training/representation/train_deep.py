@@ -2,13 +2,14 @@ import sys
 import argparse
 import yaml
 import random
+import os
 from tqdm import tqdm
-from typing import Union
+from typing import Union, Any
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
 
-sys.path.append('/home/lugeon/eeg_project/scripts')
+#sys.path.append('/home/lugeon/eeg_project/scripts')
 sys.path.append('/mlodata1/lugeon/eeg_project/scripts')
 
 from training.representation import losses
@@ -45,7 +46,8 @@ def train_routine(model: nn.Module,
                   criterion: nn.Module, 
                   n_losses: int,
                   early_stopping: Union[None, EarlyStopping], 
-                  scheduler: Union[None, object],
+                  save_epoch: Union[None, int],
+                  scheduler: Union[None, Any],
                   step_value: str,
                   device: torch.device, 
                   save_dir: str,
@@ -60,7 +62,8 @@ def train_routine(model: nn.Module,
     
     for epoch in range(-1, n_epochs):
         
-        # training
+        ############################ training ############################
+
         model.train()
         if verbose: pbar = tqdm(total=len(train_loader), ncols=70)
                 
@@ -91,7 +94,8 @@ def train_routine(model: nn.Module,
             if verbose: pbar.update(1)
         if verbose: pbar.close()
                
-        # evaluate 
+        ############################ evaluate ############################
+        
         with torch.no_grad():
             model.eval()
             for batch in iter(val_loader):
@@ -117,6 +121,12 @@ def train_routine(model: nn.Module,
                           f'Val loss: {validation_loss.export():>20}')
         
         watched_loss = validation_loss.watch()
+
+        # if saving per epoch
+        if save_epoch:
+            if epoch % save_epoch == 0:
+                os.makedirs(f'{save_dir}/epochs/{epoch}')
+                torch.save(model.state_dict(), f'{save_dir}/epochs/{epoch}/checkpoint.pt')
                 
         # if early stopping is enabled
         if early_stopping:
@@ -125,7 +135,7 @@ def train_routine(model: nn.Module,
                 if verbose: print("Early stopping")
                 break
         
-        # if scheduler is enabled
+        # if scheduler is enabled and baseline epoch is over
         if scheduler and epoch >= 0: 
             if step_value == 'loss': scheduler.step(watched_loss)
             elif step_value == 'epoch': scheduler.step(epoch)
@@ -137,7 +147,7 @@ def train_routine(model: nn.Module,
             val_loader.dataset.dataset.reshuffle()
             
         with open(f'{save_dir}/loss.txt', 'a') as f:
-            if epoch == 0:
+            if epoch == -1:
                 f.write(f'epoch training validation\n')
             f.write(f'{epoch} {training_loss.export()} {validation_loss.export()}\n')
             

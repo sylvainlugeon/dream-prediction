@@ -33,6 +33,8 @@ class EEG_Image_Batch_Dataset(Dataset):
             output_type (str, optional): Can be set to {none, label, next_frame, transform}. Defaults to 'label'.
             next_frame_index (int): Index of the next frame to output (1 correspond to the frame just after the window)
         """
+
+        random.seed(0)
         
         assert window > 0, 'Window must be strictly positive'
         assert slide > 0, 'Slide must be strictly positive'

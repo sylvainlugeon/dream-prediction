@@ -1,2 +1,0 @@
-epoch training validation
-0 [0.6961,2.0611] [0.6991,2.0856]

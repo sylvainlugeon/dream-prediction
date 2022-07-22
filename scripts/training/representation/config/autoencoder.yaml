@@ -1,15 +1,15 @@
-save_dir: /mlodata1/lugeon/eeg_project/results/transformers/autoencoder_1frame_mask5
+save_dir: /mlodata1/lugeon/eeg_project/results/patch_temporal_size/autoencoder_time10
 
 data:
   dset_name: EEG_Image_Batch_Dataset
   dset_kwargs:
-    hdf5_file: /mlodata1/lugeon/dream_data/processed/baseline_nrem/dataset.h5
+    hdf5_file: /mlodata1/lugeon/dream_data/processed/baseline_nrem/dataset_logonly.h5
     window: 10
     slide: 5
     shuffle: True
     batch_size: 32
     transforms: null
-    return_metadata: True
+    return_metadata: False
     output_type: none
     next_frame_index: null
   fraction: 0.1
@@ -19,46 +19,50 @@ model:
   kwargs:
     in_channels: 5
     space_dim: 32
-    time_dim: 1
+    time_dim: 10
     space_patch_size: 4
-    time_patch_size: 1
+    time_patch_size: 10
     emb_size: 512
-    masking_ratio: 0.5
+    masking_ratio: 0.95
     encoder_depth: 8
     decoder_depth: 2
     drop_p: 0.0
 
-n_epochs: 300
+n_epochs: 201
+save_epoch: 20
 reshuffle: False
 device: 'cuda:0'
 verbose: True
     
 loss: 
-  name: MSELoss
-  kwargs:
-    reduction: mean
+  name: MaskedMSELoss
+  kwargs: {}
   n_losses: 1
 
 optim: 
-  name: Adam
+  name: AdamW
   kwargs:
-    lr: 1.e-4
+    lr: 1.e-5
+    weight_decay: 0.01
+
 
 scheduler:
-  enabled: True
+  enabled: False
+  step_value: epoch
+  warmup: 5
   name: ReduceLROnPlateau
   kwargs:
     mode: min
     factor: 0.1 
-    patience: 10
+    patience: 15
     min_lr: 1.e-5
     threshold: 1.e-4
     verbose: True
 
 early_stop:
-  enabled: True
+  enabled: False
   kwargs:
-    patience: 20
+    patience: 30
     delta: 0
     path: 'checkpoint.pt'
     verbose: True

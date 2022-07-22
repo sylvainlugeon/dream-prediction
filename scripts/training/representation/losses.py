@@ -4,6 +4,21 @@ from torch import Tensor
 import torch.nn.functional as F
 from typing import List, Dict, Any
 
+class MaskedMSELoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+        
+        self.mse_loss = nn.MSELoss(reduction='none')
+        
+    def forward(self, input, target):
+
+        reconstruction, masked_pixels = input
+
+        # mean over masked pixels
+        loss = self.mse_loss(reconstruction, target).flatten()
+        loss = loss[masked_pixels.flatten()]
+        return torch.mean(loss)
+
 
 class AdverserialLoss(nn.Module):
     def __init__(self, 
@@ -60,8 +75,7 @@ class ContrastiveLoss(nn.Module):
     def forward(self, 
                 first_transformed: torch.Tensor, 
                 second_transformed: torch.Tensor) -> torch.Tensor:
-        """_summary_
-
+        """
         Args:
             first_transformed (torch.Tensor): Tensor of encodings under first transformation
             second_transformed (torch.Tensor): Tensor of encodings under second transformation

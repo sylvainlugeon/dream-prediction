@@ -325,6 +325,9 @@ class MaskedAutoEncoder(nn.Module):
         assert emb_size % 2 == 0, 'Embedding size must be a factor of 2'
 
         self.emb_size = emb_size
+        self.in_channels = in_channels
+        self.time_dim = time_dim
+        self.space_dim = space_dim
         
         self.encoder = AttentionNet(emb_size, encoder_depth, **kwargs)
         self.decoder = AttentionNet(emb_size, decoder_depth, **kwargs)
@@ -402,7 +405,7 @@ class MaskedAutoEncoder(nn.Module):
         else:
             return encoding
             
-    def decode(self, x: Tensor, idx: Tensor) -> Tensor: 
+    def decode(self, x: Tensor, idx: Tensor, return_mask: bool = True) -> Tensor: 
         """
         Reconstruct the original video from selected encoded patches, 
         add mask tokens at discarded patches positions
@@ -410,6 +413,7 @@ class MaskedAutoEncoder(nn.Module):
         Args:
             x (Tensor): Encoded selected patches of shape (batch_size, kept_patches, emb_size)
             idx (Tensor): Indices used for shuffling patches pior to the encoder of shape (batch_size * n_patches)
+            return_mask (bool): returns a boolean tensor with the masked patches
 
         Returns:
             Tensor: Reconstructed video of shape (batch_size, time, n_channels, x, y)
@@ -419,6 +423,7 @@ class MaskedAutoEncoder(nn.Module):
         
         # add mask tokens at the end
         n_masked = int(self.n_patches * self.masking_ratio)
+        n_keep = self.n_patches - n_masked
         mask_tokens = self.mask_token.repeat(batch_size, n_masked, 1)
         shuffled = torch.cat((x, mask_tokens), dim=1) # (batch_size, n_patches, emb_size)
         shuffled = torch.flatten(shuffled, 0, 1)
@@ -434,8 +439,46 @@ class MaskedAutoEncoder(nn.Module):
         
         # reconstruct pixels from each patch
         reconstruction = self.pixel_transform(decoding)
-        
-        return reconstruction
+
+        if return_mask:
+
+            offset = (torch.arange(batch_size) * self.n_patches) \
+                    .unsqueeze(1).repeat(1, self.n_patches)
+            idx = idx.reshape(batch_size, -1) - offset
+
+            n_masked = int(self.n_patches * self.masking_ratio)
+            keep = self.n_patches - n_masked
+
+            # Binary mask for masked patches
+            masked_patch = torch.ones_like(idx)
+            for i in range(idx.shape[0]):
+                kept = idx[i][:keep]
+                masked_patch[i][kept] = 0
+            
+            single_space_dim = int(self.space_dim / self.space_patch_size)
+            masked_patch = masked_patch.reshape(-1, self.time_n_patches, 
+                                    single_space_dim, single_space_dim)
+
+            # repeat along the time and space axis, to match the number of pixels
+            masked_patch = torch.cat(
+                [masked_patch[:, [i], :, :].repeat(1, self.time_patch_size, 1, 1) 
+                    for i in torch.arange(masked_patch.size(1))], dim=1)
+
+            masked_patch = torch.cat(
+                [masked_patch[:, :, [i], :].repeat(1, 1, self.space_patch_size, 1) 
+                    for i in torch.arange(masked_patch.size(2))], dim=2)
+
+            masked_patch = torch.cat(
+                [masked_patch[:, :, :, [i]].repeat(1, 1, 1, self.space_patch_size) 
+                    for i in torch.arange(masked_patch.size(3))], dim=3)
+
+            # repeat along the channel axis -- masking is the same across all channels
+            masked_pixels = masked_patch.unsqueeze(2).repeat(1, 1, 5, 1, 1)
+
+            return reconstruction, masked_pixels.bool()
+
+        else:   
+            return reconstruction
         
             
         

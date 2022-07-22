@@ -1,7 +1,8 @@
-# Configuration file for normalizing frequency signal
-root_dir: /mlodata1/lugeon/dream_data/processed/healthy_20sec/freq
-output_dir: /mlodata1/lugeon/dream_data/processed/healthy_20sec/norm
-subject_pattern: 'H*'
+# Configuration file to normalize the bandwidths power signal
+
+root_dir: /mlodata1/lugeon/dream_data/processed/madison_nrem_binary/freq
+output_dir: /mlodata1/lugeon/dream_data/processed/madison_nrem_binary/norm_cal
+subject_pattern: 'M*'
 
 norm_opts:
   log: True

@@ -5,7 +5,7 @@ import torch
 
 from torch.utils.data import Dataset, DataLoader, random_split
 
-sys.path.append('/home/lugeon/eeg_project/scripts')
+#sys.path.append('/home/lugeon/eeg_project/scripts')
 sys.path.append('/mlodata1/lugeon/eeg_project/scripts')
 
 from training.representation import models, losses
@@ -89,6 +89,7 @@ def process_train_config(config: Dict[str, Any], ask_user: bool = True) -> Dict[
     train_routine_kwargs = {}
     train_routine_kwargs['model'] = model
     train_routine_kwargs['n_epochs'] = config['n_epochs']
+    train_routine_kwargs['save_epoch'] = config['save_epoch']
     train_routine_kwargs['train_loader'] = train_loader
     train_routine_kwargs['val_loader'] = val_loader
     train_routine_kwargs['reshuffle'] = config['reshuffle']

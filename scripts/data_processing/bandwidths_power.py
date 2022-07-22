@@ -1,7 +1,26 @@
 import numpy as np 
+from typing import List
 
 
-def bandwidths_power(time_signal, sampling_frequency, time_period, time_window, time_shift, bandwidths):
+def bandwidths_power(time_signal: np.array, 
+                     sampling_frequency: int, 
+                     time_period: float, 
+                     time_window: float, 
+                     time_shift: float, 
+                     bandwidths: List[List[float]]) -> np.array:
+    """Compute the frequency-bands power from the EEG time-signal
+
+    Args:
+        time_signal (np.array): EEG time signal of shape [n_samples, n_electrodes]
+        sampling_frequency (int): sampling rate of the time signal
+        time_period (float): last number of seconds to extract the frequency power from 
+        time_window (float): length of window for FFT estimation
+        time_shift (float): shift amount between two consecutive window
+        bandwidths (List[List[float]]): Upper and lower bounds of the bandwidths
+
+    Returns:
+        np.array: bandwidth power signal of shape [n_windows, n_electrodes, n_channels]
+    """
 
     # for each sample (i.e time step), substract the mean across all units
     time_signal = time_signal - time_signal.mean(axis=1)[:, np.newaxis] 
@@ -50,8 +69,17 @@ def bandwidths_power(time_signal, sampling_frequency, time_period, time_window, 
 
     return bandwidths_power
 
-def _compute_power_spectrum(signal, bin_width):
+def _compute_power_spectrum(signal: np.array, 
+                            bin_width: float) -> np.array:
+    """Compute the signal power in frequency-domain
 
+    Args:
+        signal (np.array): time signal
+        bin_width (float): width between two consecutive sample frequencies
+
+    Returns:
+        np.array: power spectrum of the time signal
+    """
     freq_amplitude = np.abs(np.fft.fft(signal, axis=0))
     freq_amplitude = freq_amplitude / freq_amplitude.shape[0] # divide by number of entries
 

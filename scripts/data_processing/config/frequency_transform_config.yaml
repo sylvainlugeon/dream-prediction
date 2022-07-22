@@ -1,4 +1,5 @@
-# Configuration file for processing eeg
+# Configuration file for computing bandwiths power from time signal
+
 root_dir: /mlodata1/lugeon/dream_data/chuv/madison
 read_format: scipy # {h5py, scipy}
 signal_name: datavr_2min

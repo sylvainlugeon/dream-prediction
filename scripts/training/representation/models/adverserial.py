@@ -1,9 +1,10 @@
+from torch import Tensor
 import torch.nn as nn
 from torch.autograd import Function
 import sys
 
 sys.path.append('/mlodata1/lugeon/eeg_project/scripts')
-from training.representation import models
+
 
 #######################################################
 #   Model container for domain-adverserial learning   #
@@ -19,6 +20,7 @@ class AdverserialAutoencoder(nn.Module):
         super().__init__()
 
         # get model
+        from training.representation import models
         self.model = models.MaskedAutoEncoder(**autoencoder_kwargs)
 
         # adverserial classifier
@@ -38,8 +40,11 @@ class AdverserialAutoencoder(nn.Module):
             
         return output
         
-    def encode(self, x):
-        return self.model.encode(x)
+    def encode(self, x: Tensor, return_idx: bool = False) -> Tensor:
+        return self.model.encode(x, return_idx)
+
+    def decode(self, x: Tensor, idx: Tensor) -> Tensor:
+        return self.model.decode(x, idx)
         
     
 class ReverseLayerF(Function):

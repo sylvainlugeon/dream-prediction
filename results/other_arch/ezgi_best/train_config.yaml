@@ -1,0 +1,62 @@
+data:
+  dset_kwargs:
+    batch_size: 32
+    hdf5_file: /mlodata1/lugeon/dream_data/processed/baseline_nrem/dataset_logonly.h5
+    next_frame_index: 1
+    output_type: next_frame
+    return_metadata: false
+    shuffle: true
+    slide: 5
+    transforms: null
+    window: 10
+  dset_name: EEG_Image_Batch_Dataset
+  fraction: 0.1
+device: cuda:0
+early_stop:
+  enabled: false
+  kwargs:
+    delta: 0
+    path: checkpoint.pt
+    patience: 30
+    verbose: true
+loss:
+  kwargs:
+    reduction: mean
+  n_losses: 1
+  name: MSELoss
+model:
+  kwargs:
+    dropout: 0.8
+    encoding_dim: 512
+    features: vgg
+    image_dim: 32
+    kernel_dim: 3
+    n_channels: 5
+    n_decoder_layers: 1
+    n_frames: 10
+    time_aggregation: conv
+    time_filter_dim: 5
+    time_n_filters: 1
+  name: EncoderDecoder
+n_epochs: 201
+optim:
+  kwargs:
+    lr: 1.0e-05
+    weight_decay: 0.01
+  name: AdamW
+reshuffle: false
+save_dir: /mlodata1/lugeon/eeg_project/results/cnn/ezgi_best
+save_epoch: 20
+scheduler:
+  enabled: false
+  kwargs:
+    factor: 0.1
+    min_lr: 1.0e-05
+    mode: min
+    patience: 15
+    threshold: 0.0001
+    verbose: true
+  name: ReduceLROnPlateau
+  step_value: epoch
+  warmup: 5
+verbose: true
