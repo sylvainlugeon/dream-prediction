@@ -10,7 +10,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 
 #sys.path.append('/home/lugeon/eeg_project/scripts')
-sys.path.append('/mlodata1/lugeon/eeg_project/scripts')
+sys.path.append('/mlodata1/lugeon/eeg_dream/scripts')
 
 from training.representation import losses
 from losses import RunningLoss

@@ -1,9 +1,9 @@
 # Configuration file for transforming frequencies into images
-root_dir: /mlodata1/lugeon/dream_data/processed/madison_nrem_binary/norm_cal
-output_dir: /mlodata1/lugeon/dream_data/processed/madison_nrem_binary/images_cal
+root_dir: /mlodata1/lugeon/eeg_dream/_data_/processed/norm
+output_dir: /mlodata1/lugeon/eeg_dream/_data_/processed/images
 subject_pattern: 'M*'
 
-e_locs_path: /mlodata1/lugeon/dream_data/chuv/metadata/original/channelcoords.mat
+e_locs_path: /mlodata1/lugeon/eeg_dream/_data_/metadata/channelcoords.mat
 e_locs_read_format: scipy
 
 e_upper_limit:

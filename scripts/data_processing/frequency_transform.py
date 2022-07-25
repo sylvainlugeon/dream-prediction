@@ -13,7 +13,7 @@ import logging
 import scipy.io as sio
 from typing import Dict, Any, List
 
-sys.path.append('/mlodata1/lugeon/eeg_project/scripts')
+sys.path.append('/mlodata1/lugeon/eeg_dream/scripts')
 from data_processing.bandwidths_power import bandwidths_power
 from interaction.interaction import ask_for_config
 

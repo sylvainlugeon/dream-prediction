@@ -45,7 +45,7 @@ optim:
     weight_decay: 0.01
   name: AdamW
 reshuffle: false
-save_dir: /mlodata1/lugeon/eeg_project/results/cnn/ezgi_best
+save_dir: /mlodata1/lugeon/eeg_dream/results/cnn/ezgi_best
 save_epoch: 20
 scheduler:
   enabled: false

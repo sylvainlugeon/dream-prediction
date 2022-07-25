@@ -1,0 +1,70 @@
+save_dir: /mlodata1/lugeon/eeg_dream/results/_config_example_/
+
+data:
+  dset_name: EEG_Image_Batch_Dataset
+  dset_kwargs:
+    hdf5_file: /mlodata1/lugeon/eeg_dream/_data_/processed/dataset.h5
+    window: 10
+    slide: 5
+    shuffle: True
+    batch_size: 1
+    transforms: null
+    return_metadata: False
+    output_type: none
+    next_frame_index: null
+  fraction: 0.1
+
+model:
+  name: MaskedAutoEncoder
+  kwargs:
+    in_channels: 5
+    space_dim: 32
+    time_dim: 10
+    space_patch_size: 4
+    time_patch_size: 10
+    emb_size: 512
+    masking_ratio: 0.95
+    encoder_depth: 8
+    decoder_depth: 2
+    drop_p: 0.0
+
+n_epochs: 10
+save_epoch: 20
+reshuffle: False
+device: 'cuda:0'
+verbose: True
+    
+loss: 
+  name: MaskedMSELoss
+  kwargs: {}
+  n_losses: 1
+
+optim: 
+  name: AdamW
+  kwargs:
+    lr: 1.e-5
+    weight_decay: 0.01
+
+
+scheduler:
+  enabled: False
+  step_value: epoch
+  warmup: 5
+  name: ReduceLROnPlateau
+  kwargs:
+    mode: min
+    factor: 0.1 
+    patience: 15
+    min_lr: 1.e-5
+    threshold: 1.e-4
+    verbose: True
+
+early_stop:
+  enabled: False
+  kwargs:
+    patience: 30
+    delta: 0
+    path: 'checkpoint.pt'
+    verbose: True
+
+

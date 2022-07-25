@@ -4,7 +4,7 @@ from torch.autograd import Function
 import yaml
 import sys
 
-sys.path.append('/mlodata1/lugeon/eeg_project/scripts')
+sys.path.append('/mlodata1/lugeon/eeg_dream/scripts')
 from training.representation import models
 
 def test():

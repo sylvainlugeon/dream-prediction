@@ -1,0 +1,3 @@
+file_name label sleep_cycle sleep_stage elapsed_time
+M001_E8_NREM_S1 0 -1 2 54
+M001_E8_NREM_S2 1 -1 2 107

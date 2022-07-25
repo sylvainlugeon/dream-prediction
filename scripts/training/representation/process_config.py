@@ -6,7 +6,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader, random_split
 
 #sys.path.append('/home/lugeon/eeg_project/scripts')
-sys.path.append('/mlodata1/lugeon/eeg_project/scripts')
+sys.path.append('/mlodata1/lugeon/eeg_dream/scripts')
 
 from training.representation import models, losses
 from training.representation.early_stopping import EarlyStopping

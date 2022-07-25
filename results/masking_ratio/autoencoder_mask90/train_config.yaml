@@ -43,7 +43,7 @@ optim:
     weight_decay: 0.01
   name: AdamW
 reshuffle: false
-save_dir: /mlodata1/lugeon/eeg_project/results/masking_comparison/autoencoder_mask90
+save_dir: /mlodata1/lugeon/eeg_dream/results/masking_comparison/autoencoder_mask90
 save_epoch: 20
 scheduler:
   enabled: false

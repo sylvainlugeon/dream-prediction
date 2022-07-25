@@ -1,10 +1,10 @@
 # Configuration file for computing bandwiths power from time signal
 
-root_dir: /mlodata1/lugeon/dream_data/chuv/madison
+root_dir: /mlodata1/lugeon/eeg_dream/_data_/raw/
 read_format: scipy # {h5py, scipy}
 signal_name: datavr_2min
 transpose: True # matrix should be of shape (n_samples x n_electrodes)
-output_dir: /mlodata1/lugeon/dream_data/processed/madison_20sec/freq
+output_dir: /mlodata1/lugeon/eeg_dream/_data_/processed/freq
 
 filter_opts:
   subject_pattern: 'M*'

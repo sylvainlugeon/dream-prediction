@@ -11,7 +11,7 @@ from scipy.interpolate import griddata
 from sklearn.preprocessing import scale
 from typing import Dict, Any
 
-sys.path.append('/mlodata1/lugeon/eeg_project/scripts')
+sys.path.append('/mlodata1/lugeon/eeg_dream/scripts')
 from data_processing.aep import map_to_2d
 from interaction.interaction import ask_for_config
 

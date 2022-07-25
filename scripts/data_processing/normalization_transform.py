@@ -8,7 +8,7 @@ import glob
 import sys
 from typing import Dict, Any
 
-sys.path.append('/mlodata1/lugeon/eeg_project/scripts')
+sys.path.append('/mlodata1/lugeon/eeg_dream/scripts')
 from interaction.interaction import ask_for_config
 
 

@@ -1,4 +1,4 @@
-save_dir: /mlodata1/lugeon/eeg_project/results/patch_temporal_size/autoencoder_time10
+save_dir: /mlodata1/lugeon/eeg_dream/results/patch_temporal_size/autoencoder_time10
 
 data:
   dset_name: EEG_Image_Batch_Dataset

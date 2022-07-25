@@ -43,7 +43,7 @@ optim:
     weight_decay: 0.01
   name: AdamW
 reshuffle: false
-save_dir: /mlodata1/lugeon/eeg_project/results/patch_temporal_size/autoencoder_time1
+save_dir: /mlodata1/lugeon/eeg_dream/results/patch_temporal_size/autoencoder_time1
 save_epoch: 20
 scheduler:
   enabled: false

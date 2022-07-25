@@ -1,6 +1,5 @@
 # Configuration file for creating a H5 dataset from images
-root_dir: /mlodata1/lugeon/dream_data/processed/madison_nrem_binary/images_cal
-output_file: /mlodata1/lugeon/dream_data/processed/madison_nrem_binary/dataset_cal.h5
-metadata: /mlodata1/lugeon/dream_data/chuv/metadata/madison_metadata_nrem_binary.txt
+root_dir: /mlodata1/lugeon/eeg_dream/_data_/processed/images
+output_file: /mlodata1/lugeon/eeg_dream/_data_/processed/dataset.h5
+metadata: /mlodata1/lugeon/eeg_dream/_data_/metadata/metadata.txt
 subject_pattern: 'M*'
-

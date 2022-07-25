@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch.autograd import Function
 import sys
 
-sys.path.append('/mlodata1/lugeon/eeg_project/scripts')
+sys.path.append('/mlodata1/lugeon/eeg_dream/scripts')
 
 
 #######################################################
