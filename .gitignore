@@ -1,6 +1,7 @@
 # Project-specifc
 *.h5
 *checkpoint.pt
+.vscode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
