@@ -5,7 +5,7 @@ Source code related to my master thesis: *Towards Online Predictions of the Drea
 ## Structure
 
 ```
-├── requirements.txt         # Library requirements for setting the environment
+├── requirements.txt         # Library requirements for setting up the environment
 ├── _data_/                  # Toy data used for demo
 │   ├── metadata/            
 │   ├── processed/
